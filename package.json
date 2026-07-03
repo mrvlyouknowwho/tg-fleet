@@ -1,0 +1,13 @@
+{
+  "name": "tg-fleet",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Fleet of small Telegram utility bots monetized with Stars",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "grammy": "^1.30.0"
+  }
+}
