@@ -5,6 +5,23 @@ import * as freshpools from './bots/freshpools.mjs';
 import * as walletping from './bots/walletping.mjs';
 
 const RUGLENS = process.env.RUGLENS_USERNAME || 'RugLens_bot';
+const PROMO_CHANNEL = process.env.PROMO_CHANNEL || 'FreshPoolsFeed';
+
+const FAMILY = [
+  { u: RUGLENS, en: 'token rug/honeypot check', ru: 'проверка токена на rug/honeypot' },
+  { u: 'GasBelowBot', en: 'ETH gas alerts', ru: 'алерты газа ETH' },
+  { u: 'FreshPoolsBot', en: 'fresh DEX pools', ru: 'свежие DEX-пулы' },
+  { u: 'WalletPingAlertBot', en: 'wallet activity alerts', ru: 'алерты активности кошелька' },
+];
+const promoFor = (self) => (lang) => {
+  const others = FAMILY
+    .filter((f) => f.u.toLowerCase() !== String(self).toLowerCase())
+    .map((f) => `@${f.u} (${lang === 'ru' ? f.ru : f.en})`)
+    .join(' · ');
+  const head = lang === 'ru' ? 'Ещё бесплатные инструменты' : 'More free tools';
+  const ch = lang === 'ru' ? 'Свежие пулы ежечасно' : 'Fresh pools hourly';
+  return `\n\n${head}: ${others}\n📡 ${ch}: @${PROMO_CHANNEL}`;
+};
 
 const MODULES = [
   { ns: 'gasbelow', tokenEnv: 'GASBELOW_TOKEN', mod: gasbelow },
@@ -23,12 +40,12 @@ for (const { ns, tokenEnv, mod } of MODULES) {
   const store = makeStore(ns);
   // ctx.lang everywhere
   bot.use((ctx, next) => { ctx.lang = pickLang(ctx.from?.language_code); return next(); });
-  mod.setup(bot, store, { ruglensUsername: RUGLENS });
+  const me = await bot.api.getMe();
+  mod.setup(bot, store, { ruglensUsername: RUGLENS, promo: promoFor(me.username) });
   bot.catch(({ error, ctx }) => {
     if (error instanceof GrammyError && error.error_code === 403) return;
     console.error(`${ns} error:`, error?.message || error, 'update:', ctx?.update?.update_id);
   });
-  const me = await bot.api.getMe();
   bot.start();
   running.push(ns);
   console.log(`${ns}: @${me.username} up`);

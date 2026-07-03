@@ -50,7 +50,7 @@ const T = {
   },
 };
 
-export function setup(bot, store) {
+export function setup(bot, store, { promo } = {}) {
   const FREE_ALERTS = 1;
 
   const isPro = (id) => (store.getUser(id).proUntil || 0) > Date.now();
@@ -71,8 +71,8 @@ export function setup(bot, store) {
   const alerts = () => store.kvGet('alerts', []);
   const saveAlerts = (a) => store.kvSet('alerts', a);
 
-  bot.command('start', (ctx) => ctx.reply(T.start[ctx.lang](FREE_ALERTS)));
-  bot.command('help', (ctx) => ctx.reply(T.start[ctx.lang](FREE_ALERTS)));
+  bot.command('start', (ctx) => ctx.reply(T.start[ctx.lang](FREE_ALERTS) + (promo?.(ctx.lang) ?? '')));
+  bot.command('help', (ctx) => ctx.reply(T.start[ctx.lang](FREE_ALERTS) + (promo?.(ctx.lang) ?? '')));
 
   bot.command('gas', async (ctx) => {
     try { await ctx.reply(T.gas[ctx.lang](await fetchGasGwei())); }

@@ -70,15 +70,15 @@ const T = {
   },
 };
 
-export function setup(bot, store, { ruglensUsername }) {
+export function setup(bot, store, { ruglensUsername, promo }) {
   const PACKS = {
     p100: { stars: 50, label: { en: '100 sweeps', ru: '100 свипов' }, apply: (s, id) => s.addCredits(id, 100) },
     p500: { stars: 200, label: { en: '500 sweeps', ru: '500 свипов' }, apply: (s, id) => s.addCredits(id, 500) },
   };
   wireStars(bot, store, PACKS, T);
 
-  bot.command('start', (ctx) => ctx.reply(T.start[ctx.lang]));
-  bot.command('help', (ctx) => ctx.reply(T.start[ctx.lang]));
+  bot.command('start', (ctx) => ctx.reply(T.start[ctx.lang] + (promo?.(ctx.lang) ?? '')));
+  bot.command('help', (ctx) => ctx.reply(T.start[ctx.lang] + (promo?.(ctx.lang) ?? '')));
 
   bot.command('fresh', async (ctx) => {
     const net = (ctx.match || '').trim().toLowerCase();

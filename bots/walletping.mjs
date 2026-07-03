@@ -64,7 +64,7 @@ const T = {
   },
 };
 
-export function setup(bot, store) {
+export function setup(bot, store, { promo } = {}) {
   const isPro = (id) => (store.getUser(id).proUntil || 0) > Date.now();
   const PACKS = {
     pro30: {
@@ -79,8 +79,8 @@ export function setup(bot, store) {
   const save = (w) => store.kvSet('watches', w);
   const short = (a) => a.length > 16 ? `${a.slice(0, 8)}…${a.slice(-6)}` : a;
 
-  bot.command('start', (ctx) => ctx.reply(T.start[ctx.lang]));
-  bot.command('help', (ctx) => ctx.reply(T.start[ctx.lang]));
+  bot.command('start', (ctx) => ctx.reply(T.start[ctx.lang] + (promo?.(ctx.lang) ?? '')));
+  bot.command('help', (ctx) => ctx.reply(T.start[ctx.lang] + (promo?.(ctx.lang) ?? '')));
 
   bot.command('watch', (ctx) => {
     const arg = (ctx.match || '').trim();
