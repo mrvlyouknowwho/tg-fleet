@@ -12,6 +12,7 @@ const NETWORKS = {
 const FREE_PER_DAY = 5;
 const MIN_LIQ_BOT = 1_000;      // junk filter for /fresh
 const MIN_LIQ_CHANNEL = 25_000; // channel only shows meaningful liquidity
+const MAX_FDV_CHANNEL = 2_000_000; // channel targets fresh launches, not new pools of established tokens
 const CHANNEL_EVERY_MS = 60 * 60 * 1000;
 
 async function newPools(network) {
@@ -27,6 +28,7 @@ async function newPools(network) {
       id: p.id,
       name: a.name,
       liq: Number(a.reserve_in_usd) || 0,
+      fdv: a.fdv_usd != null ? Number(a.fdv_usd) : null,
       priceUsd: a.base_token_price_usd ? Number(a.base_token_price_usd) : null,
       createdAt: a.pool_created_at,
       // "base_0xabc..." -> "0xabc..."; ton ids keep friendly form after the prefix
@@ -108,7 +110,9 @@ export function startChannelLoop(api, channelId, store, { ruglensUsername, botUs
       for (const [net, meta] of Object.entries(NETWORKS)) {
         let pools;
         try { pools = await newPools(net); } catch { continue; }
-        const fresh = pools.filter((p) => p.liq >= MIN_LIQ_CHANNEL && !posted.has(p.id)).slice(0, 5);
+        const fresh = pools
+          .filter((p) => p.liq >= MIN_LIQ_CHANNEL && (p.fdv == null || p.fdv <= MAX_FDV_CHANNEL) && !posted.has(p.id))
+          .slice(0, 5);
         if (!fresh.length) continue;
         fresh.forEach((p) => posted.add(p.id));
         sections.push(`<b>${meta.title}</b>\n` + fresh.map((p) => poolLine(p, net, 'en', ruglensUsername)).join('\n'));
