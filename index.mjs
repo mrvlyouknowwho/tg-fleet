@@ -3,6 +3,7 @@ import { makeStore, pickLang } from './lib/store.mjs';
 import * as gasbelow from './bots/gasbelow.mjs';
 import * as freshpools from './bots/freshpools.mjs';
 import * as walletping from './bots/walletping.mjs';
+import * as jobalert from './bots/jobalert.mjs';
 
 const RUGLENS = process.env.RUGLENS_USERNAME || 'RugLens_bot';
 const PROMO_CHANNEL = process.env.PROMO_CHANNEL || 'FreshPoolsFeed';
@@ -27,10 +28,12 @@ const MODULES = [
   { ns: 'gasbelow', tokenEnv: 'GASBELOW_TOKEN', mod: gasbelow },
   { ns: 'freshpools', tokenEnv: 'FRESHPOOLS_TOKEN', mod: freshpools },
   { ns: 'walletping', tokenEnv: 'WALLETPING_TOKEN', mod: walletping },
+  // non-crypto audience: no cross-promo with the crypto family
+  { ns: 'jobalert', tokenEnv: 'JOBALERT_TOKEN', mod: jobalert, noPromo: true },
 ];
 
 const running = [];
-for (const { ns, tokenEnv, mod } of MODULES) {
+for (const { ns, tokenEnv, mod, noPromo } of MODULES) {
   const token = process.env[tokenEnv];
   if (!token) {
     console.log(`${ns}: no ${tokenEnv}, skipped`);
@@ -41,7 +44,7 @@ for (const { ns, tokenEnv, mod } of MODULES) {
   // ctx.lang everywhere
   bot.use((ctx, next) => { ctx.lang = pickLang(ctx.from?.language_code); return next(); });
   const me = await bot.api.getMe();
-  mod.setup(bot, store, { ruglensUsername: RUGLENS, promo: promoFor(me.username) });
+  mod.setup(bot, store, { ruglensUsername: RUGLENS, promo: noPromo ? null : promoFor(me.username) });
   bot.catch(({ error, ctx }) => {
     if (error instanceof GrammyError && error.error_code === 403) return;
     console.error(`${ns} error:`, error?.message || error, 'update:', ctx?.update?.update_id);
@@ -56,6 +59,14 @@ for (const { ns, tokenEnv, mod } of MODULES) {
       botUsername: me.username,
     });
     console.log(`freshpools: channel poster -> ${process.env.CHANNEL_ID}`);
+  }
+
+  if (ns === 'jobalert' && process.env.JOBALERT_CHANNEL_ID) {
+    jobalert.startChannelLoop(bot.api, process.env.JOBALERT_CHANNEL_ID, store, {
+      botUsername: me.username,
+      query: process.env.JOBALERT_CHANNEL_QUERY || '',
+    });
+    console.log(`jobalert: channel poster -> ${process.env.JOBALERT_CHANNEL_ID}`);
   }
 }
 
