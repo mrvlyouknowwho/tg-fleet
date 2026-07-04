@@ -6,7 +6,7 @@ const NETWORKS = {
   base: { title: 'Base', scan: true },
   eth: { title: 'Ethereum', scan: true },
   bsc: { title: 'BSC', scan: true },
-  solana: { title: 'Solana', scan: false },
+  solana: { title: 'Solana', scan: true },
   ton: { title: 'TON', scan: true },
 };
 const FREE_PER_DAY = 5;
